@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AlgoStudio Web</title>
+
+<!-- CodeMirror 5 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<link  rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css"/>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+
+<style>
+/* ─── VARIABLES ──────────────────────────────────────────── */
+:root {
+  --bg:       #0d0d1a;
+  --bg2:      #12121f;
+  --bg3:      #1a1a2e;
+  --bg4:      #232340;
+  --bg5:      #2d2d4f;
+  --fg:       #cdd6f4;
+  --fg2:      #8890b0;
+  --fg3:      #4a4f70;
+  --accent:   #cba6f7;
+  --accent2:  #b4befe;
+  --green:    #a6e3a1;
+  --yellow:   #f9e2af;
+  --red:      #f38ba8;
+  --blue:     #89b4fa;
+  --teal:     #94e2d5;
+  --orange:   #fab387;
+  --border:   #2d2d50;
+  --mono:     'JetBrains Mono', 'Consolas', monospace;
+  --ui:       'Syne', sans-serif;
+}
+[data-theme="light"] {
+  --bg:#f0f0fa; --bg2:#ffffff; --bg3:#e8e8f5; --bg4:#dcdcf0; --bg5:#d0d0e8;
+  --fg:#2a2a4a; --fg2:#6060a0; --fg3:#a0a0c0;
+  --accent:#7c3aed; --accent2:#4f46e5;
+  --green:#16a34a; --yellow:#ca8a04; --red:#dc2626;
+  --blue:#2563eb; --teal:#0d9488; --orange:#ea580c;
+  --border:#c8c8e0;
+}
+
+/* ─── RESET ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--ui);
+  display:flex; flex-direction:column;
+}
+
+/* ─── TOP BAR ────────────────────────────────────────────── */
+#topbar{
+  height:52px; flex-shrink:0;
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 14px; gap:8px;
+  z-index:50;
+}
+.logo{display:flex;align-items:center;gap:9px;margin-right:6px;flex-shrink:0;}
+.logo-icon{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;
+}
+.logo-name{font-size:17px;font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(135deg,var(--accent),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-tag{font-size:9px;color:var(--fg3);letter-spacing:1.5px;text-transform:uppercase;
+  font-family:var(--mono);-webkit-text-fill-color:var(--fg3);}
+
+.vsep{width:1px;height:26px;background:var(--border);margin:0 2px;flex-shrink:0;}
+.spacer{flex:1;}
+
+.btn{
+  height:32px;padding:0 13px;border:none;border-radius:6px;
+  font-family:var(--ui);font-size:13px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;transition:filter .12s,transform .1s;
+  white-space:nowrap;flex-shrink:0;
+}
+.btn:disabled{opacity:.4;pointer-events:none;}
+.btn-run{background:var(--green);color:#0a1a0a;}
+.btn-run:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-stop{background:var(--red);color:#1a0000;}
+.btn-stop:hover{filter:brightness(1.1);}
+.btn-ghost{background:var(--bg4);color:var(--fg2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg5);color:var(--fg);}
+.btn-sq{width:32px;padding:0;justify-content:center;font-size:15px;}
+
+.dd-wrap{position:relative;flex-shrink:0;}
+#ddMenu{
+  position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:4px;min-width:170px;display:none;z-index:200;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+#ddMenu.open{display:block;}
+.dd-item{
+  padding:8px 12px;border-radius:5px;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;gap:8px;color:var(--fg2);
+}
+.dd-item:hover{background:var(--bg4);color:var(--fg);}
+
+/* ─── MAIN LAYOUT ─────────────────────────────────────────── */
+/* ⚠ min-height:0 everywhere so flex children can shrink */
+#main{flex:1;display:flex;min-height:0;overflow:hidden;}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────── */
+#sidebar{
+  width:256px;flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  transition:width .2s ease;
+}
+#sidebar.collapsed{width:0;overflow:hidden;}
+
+.sb-head{
+  height:36px;flex-shrink:0;padding:0 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--fg3);
+}
+#exTree{flex:1;overflow-y:auto;padding:4px 0;min-height:0;}
+#exTree::-webkit-scrollbar{width:4px;}
+#exTree::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.ch-head{
+  padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--accent);
+  cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;
+}
+.ch-head:hover{color:var(--fg);}
+.ch-arr{transition:transform .2s;display:inline-block;}
+.ch-head.open .ch-arr{transform:rotate(90deg);}
+.ch-body{display:none;}
+.ch-body.open{display:block;}
+.ex-item{
+  padding:5px 14px 5px 26px;font-size:12px;
+  font-family:var(--mono);color:var(--fg2);cursor:pointer;
+  border-left:2px solid transparent;transition:all .1s;
+}
+.ex-item:hover{background:var(--bg3);color:var(--fg);border-left-color:var(--accent2);}
+.ex-item.sel{color:var(--accent);border-left-color:var(--accent);background:var(--bg3);}
+
+/* ─── EDITOR COLUMN ───────────────────────────────────────── */
+#edcol{
+  flex:1;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;
+}
+
+#tabbar{
+  height:36px;flex-shrink:0;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-end;padding:0 8px;gap:2px;
+  overflow-x:auto;
+}
+#tabbar::-webkit-scrollbar{height:0;}
+.tab{
+  height:29px;padding:0 10px;border-radius:6px 6px 0 0;
+  background:var(--bg3);color:var(--fg2);border:1px solid var(--border);border-bottom:none;
+  font-size:12px;font-family:var(--mono);cursor:pointer;flex-shrink:0;
+  display:inline-flex;align-items:center;gap:8px;transition:background .1s;
+  max-width:160px;
+}
+.tab.active{background:var(--bg);color:var(--fg);}
+.tab:hover:not(.active){background:var(--bg4);color:var(--fg);}
+.tab-lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;}
+.tab-x{
+  width:15px;height:15px;border-radius:3px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--fg3);
+}
+.tab-x:hover{background:var(--red);color:#fff;}
+.add-tab{
+  width:26px;height:26px;flex-shrink:0;
+  background:transparent;border:1px dashed var(--border);border-radius:5px;
+  font-size:17px;color:var(--fg3);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;margin-left:4px;
+  transition:all .15s;line-height:1;
+}
+.add-tab:hover{border-color:var(--accent);color:var(--accent);}
+label.btn{cursor:pointer;}
+label.btn:hover{background:var(--bg5);color:var(--fg);}
+
+/* ⚠ Editor wrapper: flex:1 + min-height:0 so CM fills space correctly */
+#edwrap{flex:1;min-height:0;position:relative;overflow:hidden;}
+
+.CodeMirror{
+  height:100% !important;
+  font-family:var(--mono) !important;
+  font-size:14px !important;
+  line-height:1.65 !important;
+  background:var(--bg) !important;
+  color:var(--fg) !important;
+}
+.CodeMirror-scroll{overflow-y:auto !important;overflow-x:auto !important;}
+.CodeMirror-gutters{background:var(--bg2) !important;border-right:1px solid var(--border) !important;}
+.CodeMirror-linenumber{color:var(--fg3) !important;font-size:12px !important;padding:0 8px 0 6px !important;}
+.CodeMirror-cursor{border-left:2px solid var(--accent) !important;}
+.CodeMirror-selected{background:rgba(99,102,241,.22) !important;}
+.CodeMirror-activeline-background{background:rgba(255,255,255,.025) !important;}
+.CodeMirror-matchingbracket{outline:1px solid var(--accent2);color:inherit !important;}
+
+/* Syntax colors dark */
+.cm-algo-kw  {color:#cba6f7 !important;font-weight:600;}
+.cm-algo-type{color:#f38ba8 !important;}
+.cm-algo-bool{color:#eba0ac !important;}
+.cm-algo-fn  {color:#89dceb !important;}
+.cm-algo-str {color:#a6e3a1 !important;}
+.cm-algo-num {color:#fab387 !important;}
+.cm-algo-cmt {color:#585b70 !important;font-style:italic;}
+.cm-algo-op  {color:#89b4fa !important;}
+
+/* Syntax colors light */
+[data-theme="light"] .CodeMirror{background:#ffffff !important;color:#2a2a4a !important;}
+[data-theme="light"] .CodeMirror-gutters{background:#f0f0fa !important;}
+[data-theme="light"] .cm-algo-kw  {color:#7c3aed !important;}
+[data-theme="light"] .cm-algo-type{color:#dc2626 !important;}
+[data-theme="light"] .cm-algo-bool{color:#e64553 !important;}
+[data-theme="light"] .cm-algo-fn  {color:#0891b2 !important;}
+[data-theme="light"] .cm-algo-str {color:#16a34a !important;}
+[data-theme="light"] .cm-algo-num {color:#ea580c !important;}
+[data-theme="light"] .cm-algo-cmt {color:#9ca0b0 !important;}
+[data-theme="light"] .cm-algo-op  {color:#2563eb !important;}
+
+/* ─── RIGHT PANEL ─────────────────────────────────────────── */
+#rpanel{
+  width:330px;flex-shrink:0;
+  background:var(--bg2);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+}
+
+.ptabs{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);}
+.ptab{
+  flex:1;height:34px;background:transparent;border:none;
+  color:var(--fg2);font-family:var(--ui);font-size:12px;font-weight:600;
+  cursor:pointer;letter-spacing:.4px;transition:all .1s;
+  border-bottom:2px solid transparent;
+}
+.ptab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.ptab:hover:not(.active){color:var(--fg);background:var(--bg3);}
+
+/* ⚠ ALL panes are display:none by default; only .active shows */
+.pane{flex:1;display:none;flex-direction:column;min-height:0;overflow:hidden;}
+.pane.active{display:flex;}
+
+/* Console */
+#consoleOut{
+  flex:1;overflow-y:auto;padding:12px 14px;min-height:0;
+  font-family:var(--mono);font-size:13px;line-height:1.7;word-break:break-word;
+}
+#consoleOut::-webkit-scrollbar{width:4px;}
+#consoleOut::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.l-out{color:var(--fg);}
+.l-in {color:var(--teal);}
+.l-err{color:var(--red);}
+.l-inf{color:var(--fg3);font-style:italic;}
+
+.cbar{
+  flex-shrink:0;padding:5px 10px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+}
+
+#inputWrap{flex-shrink:0;padding:6px 10px 8px;border-top:1px solid var(--border);}
+.inp-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--fg3);margin-bottom:4px;}
+#inputArea{
+  width:100%;height:58px;resize:vertical;
+  background:var(--bg);border:1px solid var(--border);border-radius:5px;
+  color:var(--fg);font-family:var(--mono);font-size:12px;
+  padding:6px 8px;outline:none;transition:border-color .15s;
+}
+#inputArea:focus{border-color:var(--accent);}
+
+/* Variables */
+#varsList{flex:1;overflow-y:auto;padding:8px;min-height:0;}
+#varsList::-webkit-scrollbar{width:4px;}
+#varsList::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.vrow{
+  display:flex;align-items:baseline;gap:8px;
+  padding:5px 8px;border-radius:5px;background:var(--bg3);
+  font-family:var(--mono);font-size:12px;margin-bottom:2px;
+}
+.vname{color:var(--accent2);font-weight:500;min-width:80px;flex-shrink:0;}
+.vval {color:var(--green);flex:1;word-break:break-all;}
+.v-empty{padding:16px;color:var(--fg3);font-size:12px;font-style:italic;text-align:center;}
+
+/* Generated code */
+#genOut{
+  flex:1;overflow:auto;padding:12px 14px;min-height:0;
+  font-family:var(--mono);font-size:12.5px;line-height:1.6;
+  color:var(--fg2);white-space:pre;background:var(--bg);
+}
+#genOut::-webkit-scrollbar{width:4px;height:4px;}
+#genOut::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ─── STATUS BAR ──────────────────────────────────────────── */
+#statusbar{
+  height:22px;flex-shrink:0;
+  background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:16px;
+  font-family:var(--mono);font-size:11px;color:var(--fg3);
+}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--fg3);display:inline-block;margin-right:5px;flex-shrink:0;}
+.sdot.ok {background:var(--green);}
+.sdot.err{background:var(--red);}
+.sdot.run{background:var(--yellow);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* ─── MODAL ───────────────────────────────────────────────── */
+#mOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.72);
+  display:none;align-items:center;justify-content:center;z-index:500;
+}
+#mOverlay.open{display:flex;}
+#mBox{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  width:700px;max-width:95vw;max-height:85vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,.6);
+}
+#mHead{
+  padding:14px 18px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+#mTitle{font-size:15px;font-weight:700;}
+#mBody{flex:1;overflow-y:auto;padding:16px 18px;}
+#mFoot{
+  padding:10px 18px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;
+}
+.sc-grid{display:grid;grid-template-columns:130px 1fr;gap:8px 16px;align-items:center;}
+.sc-key{font-family:var(--mono);font-size:12px;color:var(--accent2);font-weight:500;}
+.sc-val{font-size:13px;color:var(--fg2);}
+
+/* ─── TOAST ───────────────────────────────────────────────── */
+#toasts{position:fixed;bottom:28px;right:18px;z-index:999;display:flex;flex-direction:column;gap:7px;}
+.toast{
+  padding:9px 15px;border-radius:8px;font-size:13px;
+  color:#fff;background:var(--bg5);border-left:3px solid var(--accent);
+  box-shadow:0 4px 16px rgba(0,0,0,.4);animation:tsin .2s ease;
+}
+.toast.ok{border-left-color:var(--green);}
+.toast.er{border-left-color:var(--red);}
+@keyframes tsin{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ─── ERROR LINE HIGHLIGHT ──────────────────────────────── */
+.cm-error-line{background:rgba(243,139,168,.12) !important;}
+.CodeMirror-gutter-elt .error-gutter{color:var(--red);font-size:13px;line-height:1;cursor:pointer;}
+
+/* ─── SHARE MODAL ────────────────────────────────────────── */
+.share-url-box{
+  display:flex;gap:8px;align-items:center;margin-top:12px;
+}
+.share-url-inp{
+  flex:1;padding:9px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;color:var(--fg);font-family:var(--mono);font-size:12px;outline:none;
+}
+.share-url-inp:focus{border-color:var(--accent);}
+
+/* ─── AUTOCOMPLETE ───────────────────────────────────────── */
+.CodeMirror-hints{
+  background:var(--bg3) !important;border:1px solid var(--border) !important;
+  border-radius:8px !important;padding:4px !important;box-shadow:0 8px 24px rgba(0,0,0,.5) !important;
+  font-family:var(--mono) !important;font-size:13px !important;z-index:200 !important;
+}
+.CodeMirror-hint{
+  color:var(--fg2) !important;padding:5px 12px !important;border-radius:5px !important;
+}
+.CodeMirror-hint-active{
+  background:var(--bg5) !important;color:var(--accent) !important;
+}
+</style>
+</head>
+
+<body>
+<!-- ══════════════════ TOP BAR ════════════════════════ -->
+<div id="topbar">
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <div>
+      <div class="logo-name">AlgoStudio</div>
+      <div class="logo-tag">Web Edition</div>
+    </div>
+  </div>
+  <div class="vsep"></div>
+  <button class="btn btn-run"  id="btnRun"  title="F5">▶ Exécuter</button>
+  <button class="btn btn-stop" id="btnStop" title="F6" disabled>■ Arrêter</button>
+  <div class="vsep"></div>
+  <button class="btn btn-ghost" id="btnSidebar">☰ Exemples</button>
+  <div class="vsep"></div>
+  <div class="dd-wrap">
+    <button class="btn btn-ghost" id="btnExport">⬆ Exporter ▾</button>
+    <div id="ddMenu">
+      <div class="dd-item" id="ddC">🔵 Générer code C</div>
+      <div class="dd-item" id="ddPy">🟡 Générer Python</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost" id="btnSaveFile" title="Enregistrer sur le disque (Ctrl+S)">💾 Enregistrer</button>
+  <label  class="btn btn-ghost" id="btnOpenFile" title="Ouvrir un fichier .algo">📂 Ouvrir<input type="file" id="fileInput" accept=".algo,.txt" style="display:none"/></label>
+  <div class="vsep"></div>
+  <button class="btn btn-ghost" id="btnSave"  title="Sauvegarder et partager">🔗 Partager</button>
+  <div class="vsep"></div>
+  <button class="btn btn-ghost btn-sq" id="btnTheme" title="Thème">🌙</button>
+  <button class="btn btn-ghost btn-sq" id="btnKeys"  title="Raccourcis">⌨</button>
+</div>
+
+<!-- ══════════════════ MAIN ═══════════════════════════ -->
+<div id="main">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-head">
+      <span>Bibliothèque</span>
+      <span id="exCount"></span>
+    </div>
+    <div id="exTree">
+      <div style="padding:12px;color:var(--fg3);font-size:12px;">Chargement…</div>
+    </div>
+  </div>
+
+  <!-- EDITOR COLUMN -->
+  <div id="edcol">
+    <div id="tabbar"></div>
+    <div id="edwrap">
+      <textarea id="cmeditor"></textarea>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="rpanel">
+    <div class="ptabs">
+      <button class="ptab active" data-pane="pConsole">Sortie</button>
+      <button class="ptab"        data-pane="pVars">Variables</button>
+      <button class="ptab"        data-pane="pGen">Généré</button>
+    </div>
+
+    <!-- ① Console pane -->
+    <div class="pane active" id="pConsole">
+      <div id="consoleOut">
+        <span class="l-inf">Prêt. Appuyez sur ▶ ou F5 pour exécuter.</span>
+      </div>
+      <div class="cbar">
+        <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 9px" id="btnClear">Effacer</button>
+      </div>
+      <div id="inputWrap">
+        <div class="inp-lbl">Entrées optionnelles <span style="font-weight:400;color:var(--fg3)">(pré-remplir si besoin)</span></div>
+        <textarea id="inputArea" placeholder="Laisser vide : le programme demandera interactivement&#10;Ou pré-remplir : une valeur par ligne&#10;ex: 42&#10;hello" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <!-- ② Variables pane -->
+    <div class="pane" id="pVars">
+      <div id="varsList">
+        <div class="v-empty">Exécutez un algorithme pour voir les variables.</div>
+      </div>
+    </div>
+
+    <!-- ③ Generated code pane -->
+    <div class="pane" id="pGen">
+      <pre id="genOut">Cliquez sur ⬆ Exporter pour générer du code C ou Python.</pre>
+      <div class="cbar">
+        <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 9px" id="btnCopyGen">Copier</button>
+        <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 9px" id="btnDlGen">Télécharger</button>
+      </div>
+    </div>
+
+  </div><!-- /rpanel -->
+</div><!-- /main -->
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span class="sdot" id="stDot"></span>
+  <span id="stText">Prêt</span>
+  <span id="stCursor">Ln 1, Col 1</span>
+  <span style="flex:1"></span>
+  <span id="stTime"></span>
+</div>
+
+<!-- MODAL -->
+<div id="mOverlay">
+  <div id="mBox">
+    <div id="mHead">
+      <div id="mTitle"></div>
+      <button class="btn btn-ghost btn-sq" id="btnCloseModal">✕</button>
+    </div>
+    <div id="mBody"></div>
+    <div id="mFoot">
+      <button class="btn btn-ghost" id="btnCloseModal2">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CODEMIRROR CUSTOM MODE — Algo
+═══════════════════════════════════════════════════════════ */
+CodeMirror.defineMode("algo", function () {
+  const KW = new Set([
+    'algorithme','var','const','type','debut','fin',
+    'si','alors','sinon','fsi','finsi',
+    'pour','a','pas','faire','finpour',
+    'tant','que','tantque','fintantque',
+    'repeter','jusqua','finrepeter',
+    'fonction','procedure','retourner','retourne',
+    'enregistrement','finrec',
+    'ecrire','lire',
+    'et','ou','non',
+    'tableau','de','pointeur','vers','fichier',
+    'nouveau','liberer','nil','allouer',
+    'ouvrir','fermer','finfichier',
+    'div','mod',
+    'selon','cas','autrement','finselon',
+    'arreter','continuer',
+  ]);
+  const TYPES = new Set(['entier','reel','booleen','chaine','caractere']);
+  const BOOLS = new Set(['vrai','faux']);
+  const FUNS  = new Set([
+    'abs','sqrt','racine','floor','ceil','entier','reel','chaine',
+    'long','longueur','taille','max','min','random','aleatoire',
+    'ord','chr','majuscule','minuscule','arrondi','puissance','pow',
+    'log','log2','log10','sin','cos','tan','concat','sous_chaine',
+    'trouve','remplace','split','trim','pi','e',
+  ]);
+
+  return {
+    startState: () => ({ inML: false }),
+    token: function (stream, state) {
+      if (state.inML) {
+        if (stream.match(/.*?\*\//)) { state.inML = false; return 'algo-cmt'; }
+        stream.skipToEnd(); return 'algo-cmt';
+      }
+      if (stream.match(/\/\*/))       { state.inML = true; return 'algo-cmt'; }
+      if (stream.match(/\/\/.*/))     return 'algo-cmt';
+      if (stream.match(/"(?:[^"\\]|\\.)*"/)) return 'algo-str';
+      if (stream.match(/'(?:[^'\\]|\\.)'/) ) return 'algo-str';
+      if (stream.match(/\d+\.\d+/))   return 'algo-num';
+      if (stream.match(/\d+/))        return 'algo-num';
+      if (stream.match(/:=|<-|->|<>|<=|>=|[+\-*\/=<>]/)) return 'algo-op';
+      if (stream.match(/[A-Za-zÀ-ÿ_][A-Za-zÀ-ÿ0-9_]*/)) {
+        const w = stream.current().toLowerCase();
+        if (BOOLS.has(w))  return 'algo-bool';
+        if (TYPES.has(w))  return 'algo-type';
+        if (KW.has(w))     return 'algo-kw';
+        if (FUNS.has(w))   return 'algo-fn';
+        return null;
+      }
+      stream.next();
+      return null;
+    }
+  };
+});
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+const DEFAULT = `Algorithme Bonjour;
+Var
+    nom : Chaine;
+Debut
+    Ecrire("Entrez votre nom :");
+    Lire(nom);
+    Ecrire("Bonjour,", nom, "!");
+Fin.
+`;
+
+let tabs     = [];
+let activeId = null;
+let tabIdx   = 0;
+let running  = false;
+let genExt   = 'py';
+let theme    = localStorage.getItem('as_theme') || 'dark';
+
+/* ═══════════════════════════════════════════════════════════
+   CODEMIRROR INIT
+═══════════════════════════════════════════════════════════ */
+const cm = CodeMirror.fromTextArea(document.getElementById('cmeditor'), {
+  mode: 'algo',
+  lineNumbers: true,
+  matchBrackets: true,
+  autoCloseBrackets: true,
+  styleActiveLine: true,
+  indentWithTabs: false,
+  tabSize: 4,
+  indentUnit: 4,
+  extraKeys: {
+    'F5':         () => doRun(),
+    'F6':         () => doStop(),
+    'Ctrl-/':     c  => c.execCommand('toggleComment'),
+    'Ctrl-T':     () => newTab(),
+    'Ctrl-W':     () => closeActiveTab(),
+    'Ctrl-S':     () => saveFileToDisk(),
+    'Ctrl-Space': 'autocomplete',
+  }
+});
+// ⚠ Use requestAnimationFrame so flex layout is computed first
+requestAnimationFrame(() => { cm.setSize('100%', '100%'); cm.refresh(); });
+
+cm.on('cursorActivity', () => {
+  const p = cm.getCursor();
+  document.getElementById('stCursor').textContent = `Ln ${p.line+1}, Col ${p.ch+1}`;
+});
+
+/* ═══════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════ */
+function newTab(name, code) {
+  const id = 'T' + (++tabIdx);
+  tabs.push({ id, name: name || 'Sans titre', code: code || DEFAULT });
+  renderTabs();
+  activateTab(id);
+}
+
+function activateTab(id) {
+  if (activeId) {
+    const t = tabs.find(t => t.id === activeId);
+    if (t) t.code = cm.getValue();
+  }
+  activeId = id;
+  const t  = tabs.find(t => t.id === id);
+  if (t) {
+    cm.setValue(t.code);
+    requestAnimationFrame(() => cm.refresh());
+  }
+  renderTabs();
+}
+
+function closeTab(id) {
+  if (tabs.length <= 1) return;
+  const i = tabs.findIndex(t => t.id === id);
+  if (activeId === id) {
+    activateTab((tabs[i + 1] || tabs[i - 1]).id);
+  }
+  tabs = tabs.filter(t => t.id !== id);
+  renderTabs();
+}
+
+function closeActiveTab() { closeTab(activeId); }
+
+function renderTabs() {
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = '';
+  tabs.forEach(t => {
+    const d = document.createElement('div');
+    d.className = 'tab' + (t.id === activeId ? ' active' : '');
+    d.innerHTML =
+      `<span class="tab-lbl" title="${esc(t.name)}">${esc(t.name)}</span>` +
+      `<span class="tab-x" data-id="${t.id}">✕</span>`;
+    d.addEventListener('click', e => {
+      if (e.target.classList.contains('tab-x')) closeTab(e.target.dataset.id);
+      else activateTab(t.id);
+    });
+    bar.appendChild(d);
+  });
+  const add = document.createElement('div');
+  add.className = 'add-tab'; add.title = 'Ctrl+T'; add.textContent = '+';
+  add.onclick = () => newTab();
+  bar.appendChild(add);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANEL SWITCHING
+═══════════════════════════════════════════════════════════ */
+function switchPane(paneId) {
+  document.querySelectorAll('.pane').forEach(p =>
+    p.classList.toggle('active', p.id === paneId));
+  document.querySelectorAll('.ptab').forEach(b =>
+    b.classList.toggle('active', b.dataset.pane === paneId));
+}
+document.querySelectorAll('.ptab').forEach(b =>
+  b.addEventListener('click', () => switchPane(b.dataset.pane)));
+
+/* ═══════════════════════════════════════════════════════════
+   RUN
+═══════════════════════════════════════════════════════════ */
+/* ── Prompt inline dans la console pour Lire() ──────────── */
+function _showInputPrompt(out, promptText) {
+  return new Promise((resolve) => {
+    // Conteneur de la ligne de prompt
+    const wrap = document.createElement('div');
+    wrap.className = 'l-prompt-wrap';
+    wrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin:2px 0;';
+
+    const label = document.createElement('span');
+    label.className = 'l-prompt-label';
+    label.textContent = promptText || '▶ ';
+    label.style.cssText = 'color:var(--accent);font-weight:600;white-space:nowrap;flex-shrink:0;';
+
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.autocomplete = 'off';
+    inp.spellcheck = false;
+    inp.style.cssText = (
+      'flex:1;background:transparent;border:none;border-bottom:1px solid var(--accent);' +
+      'color:var(--teal);font-family:var(--mono);font-size:13px;outline:none;' +
+      'padding:1px 4px;min-width:0;'
+    );
+
+    wrap.appendChild(label);
+    wrap.appendChild(inp);
+    out.appendChild(wrap);
+    out.scrollTop = out.scrollHeight;
+    inp.focus();
+
+    function submit() {
+      const val = inp.value;
+      // Remplacer le champ par la valeur tapée (style terminal)
+      wrap.innerHTML = '';
+      const echo = document.createElement('div');
+      echo.className = 'l-in';
+      echo.textContent = '→ ' + val;
+      out.appendChild(echo);
+      out.scrollTop = out.scrollHeight;
+      resolve(val);
+    }
+
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    });
+  });
+}
+
+/* ── Affiche les lignes de sortie dans la console ─────── */
+function _renderOutputLines(out, outputText, lastRenderedLines) {
+  if (!outputText) return lastRenderedLines;
+  const lines = outputText.split('\n');
+  for (let i = lastRenderedLines; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line && i === lines.length - 1) continue; // skip trailing empty
+    const d = document.createElement('div');
+    d.className = line.startsWith('→ ') ? 'l-in' : 'l-out';
+    d.textContent = line;
+    out.appendChild(d);
+  }
+  return lines.length;
+}
+
+async function doRun() {
+  if (running) return;
+  running = true;
+  setStatus('run', 'Exécution…');
+  document.getElementById('btnRun').disabled  = true;
+  document.getElementById('btnStop').disabled = false;
+
+  const source   = cm.getValue();
+  // Inputs pré-remplis dans la zone Entrées (optionnel)
+  const preInputs = document.getElementById('inputArea').value
+                      .split('\n').map(s => s.trim()).filter(Boolean);
+
+  switchPane('pConsole');
+  const out = document.getElementById('consoleOut');
+  out.innerHTML = '';
+  document.getElementById('stTime').textContent = '';
+  const t0 = performance.now();
+
+  // Inputs accumulés au fur et à mesure des Lire()
+  let collectedInputs = [...preInputs];
+  let renderedLines   = 0;
+
+  try {
+    while (true) {
+      if (!running) break; // stop demandé
+
+      const res = await fetch('/api/run', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ source, inputs: collectedInputs }),
+        signal:  AbortSignal.timeout(16000),
+      });
+      const data = await res.json();
+
+      // Affiche uniquement les nouvelles lignes depuis la dernière exécution
+      renderedLines = _renderOutputLines(out, data.output, renderedLines);
+      out.scrollTop = out.scrollHeight;
+
+      // ── Cas 1 : Lire() a besoin d'un input interactif ────────
+      if (data.needs_input && !data.error) {
+        setStatus('run', `Lire() — en attente de saisie…`);
+        const val = await _showInputPrompt(out, '▶ ');
+        if (!running) break;
+        collectedInputs.push(val);
+        // Réinitialise le compteur de rendu pour le prochain run
+        renderedLines = 0;
+        out.innerHTML = ''; // nettoie pour ré-afficher depuis le début
+        renderedLines  = 0;
+        continue; // relance l'exécution avec le nouvel input
+      }
+
+      // ── Cas 2 : Erreur ────────────────────────────────────────
+      if (data.error) {
+        // Erreurs "attendues" → message info au lieu d'erreur rouge
+        const isExpected = data.error.includes('désactivé en version Web') ||
+                           data.error.includes('aucune entrée fournie');
+        if (isExpected && data.error.includes('désactivé en version Web')) {
+          addLine(out, 'l-inf',
+            'ℹ️  Les opérations fichier (ouvrir/fermer) ne sont pas disponibles ' +
+            'dans la version Web pour des raisons de sécurité.');
+          setStatus('', 'Non disponible en version Web');
+        } else {
+          addLine(out, 'l-err', '❌ ' + data.error);
+          setStatus('err', data.error.slice(0, 70));
+          // Highlight la ligne erreur dans l'éditeur
+          const errLine = parseErrorLine(data.error);
+          if (errLine) highlightErrorLine(errLine);
+        }
+      } else {
+        clearErrorHighlight();
+        // ── Cas 3 : Terminé avec succès ──────────────────────────
+        const ms = Math.round(performance.now() - t0);
+        setStatus('ok', `Terminé — ${ms} ms`);
+        document.getElementById('stTime').textContent = `⏱ ${ms} ms`;
+      }
+
+      renderVars(data.variables || {});
+      out.scrollTop = out.scrollHeight;
+      break;
+    }
+
+  } catch (e) {
+    addLine(out, 'l-err', '❌ Erreur réseau : ' + e.message);
+    setStatus('err', 'Erreur réseau');
+  }
+
+  running = false;
+  document.getElementById('btnRun').disabled  = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function doStop() {
+  running = false;
+  document.getElementById('btnRun').disabled  = false;
+  document.getElementById('btnStop').disabled = true;
+  setStatus('', 'Arrêté');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXPORT / GENERATE
+═══════════════════════════════════════════════════════════ */
+async function doExport(lang) {
+  closeDrop();
+  const source = cm.getValue();
+  switchPane('pGen');
+  document.getElementById('genOut').textContent = 'Génération en cours…';
+
+  try {
+    const res  = await fetch('/api/generate', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ source, lang }),
+    });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('genOut').textContent = '❌ ' + data.error;
+      toast('Erreur de génération', 'er');
+    } else {
+      document.getElementById('genOut').textContent = data.code;
+      genExt = data.ext;
+      toast(`Code ${lang === 'c' ? 'C' : 'Python'} généré ✓`, 'ok');
+    }
+  } catch (e) {
+    document.getElementById('genOut').textContent = '❌ ' + e.message;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXAMPLES
+═══════════════════════════════════════════════════════════ */
+async function loadExamples() {
+  try {
+    const res  = await fetch('/api/examples');
+    const data = await res.json();
+    const tree = document.getElementById('exTree');
+    tree.innerHTML = '';
+    let total = 0;
+
+    const chapters = Object.keys(data).sort((a, b) => {
+      const na = parseInt((a.match(/\d+/) || [0])[0]);
+      const nb = parseInt((b.match(/\d+/) || [0])[0]);
+      return na - nb;
+    });
+
+    chapters.forEach((chap, ci) => {
+      const items = data[chap];
+      total += items.length;
+
+      const head = document.createElement('div');
+      head.className = 'ch-head' + (ci === 0 ? ' open' : '');
+      head.innerHTML = `<span class="ch-arr">▶</span><span>${esc(chap)}</span>`;
+
+      const body = document.createElement('div');
+      body.className = 'ch-body' + (ci === 0 ? ' open' : '');
+
+      head.onclick = () => {
+        head.classList.toggle('open');
+        body.classList.toggle('open');
+      };
+
+      items.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'ex-item';
+        item.textContent = ex.name;
+        item.title = ex.full_title;
+        // Détecter les exemples avec opérations fichier
+        const hasFile = ex.code.includes('ouvrir') || ex.code.includes('fermer');
+        if (hasFile) {
+          item.innerHTML = item.textContent +
+            ' <span title="Opérations fichier non disponibles en Web" ' +
+            'style="color:var(--yellow);font-size:10px;vertical-align:middle">⚠️</span>';
+        }
+        item.onclick = () => {
+          document.querySelectorAll('.ex-item').forEach(e => e.classList.remove('sel'));
+          item.classList.add('sel');
+          if (activeId) {
+            const t = tabs.find(t => t.id === activeId);
+            if (t) { t.name = ex.name; t.code = ex.code; cm.setValue(ex.code); renderTabs(); }
+          } else {
+            newTab(ex.name, ex.code);
+          }
+          // Prévenir si exemple avec fichiers
+          if (hasFile) {
+            toast('ℹ️ Cet exemple utilise des fichiers — non disponible en version Web', '');
+          }
+        };
+        body.appendChild(item);
+      });
+
+      tree.appendChild(head);
+      tree.appendChild(body);
+    });
+
+    document.getElementById('exCount').textContent = total;
+  } catch (e) {
+    document.getElementById('exTree').innerHTML =
+      `<div style="padding:10px;color:var(--red);font-size:12px;">Erreur : ${esc(e.message)}</div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VARS
+═══════════════════════════════════════════════════════════ */
+function renderVars(vars) {
+  const list = document.getElementById('varsList');
+  list.innerHTML = '';
+  const entries = Object.entries(vars);
+  if (!entries.length) {
+    list.innerHTML = '<div class="v-empty">Aucune variable.</div>';
+    return;
+  }
+  entries.forEach(([k, v]) => {
+    const r = document.createElement('div');
+    r.className = 'vrow';
+    r.innerHTML = `<span class="vname">${esc(k)}</span><span class="vval">${esc(String(v))}</span>`;
+    list.appendChild(r);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════ */
+function applyTheme() {
+  document.body.dataset.theme = theme;
+  document.getElementById('btnTheme').textContent = theme === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('as_theme', theme);
+}
+function toggleTheme() { theme = theme === 'dark' ? 'light' : 'dark'; applyTheme(); }
+
+/* ═══════════════════════════════════════════════════════════
+   STATUS
+═══════════════════════════════════════════════════════════ */
+function setStatus(type, msg) {
+  document.getElementById('stDot').className = 'sdot' + (type ? ' ' + type : '');
+  document.getElementById('stText').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+function showModal(title, html) {
+  document.getElementById('mTitle').textContent = title;
+  document.getElementById('mBody').innerHTML    = html;
+  document.getElementById('mOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('mOverlay').classList.remove('open'); }
+
+function showKeys() {
+  const rows = [
+    ['F5',         "Exécuter l'algorithme"],
+    ['F6',         "Arrêter l'exécution"],
+    ['Ctrl+T',     'Nouvel onglet'],
+    ['Ctrl+W',     "Fermer l'onglet actif"],
+    ['Ctrl+Space', 'Auto-complétion'],
+    ['Ctrl+/',     'Commenter / Décommenter'],
+    ['Ctrl+Z',     'Annuler'],
+    ['Ctrl+Y',     'Rétablir'],
+  ];
+  showModal('Raccourcis clavier',
+    `<div class="sc-grid">${rows.map(([k,d]) =>
+      `<div class="sc-key">${esc(k)}</div><div class="sc-val">${esc(d)}</div>`
+    ).join('')}</div>`
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addLine(container, cls, text) {
+  const d = document.createElement('div');
+  d.className = cls; d.textContent = text;
+  container.appendChild(d);
+}
+
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+function dlText(filename, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function closeDrop() { document.getElementById('ddMenu').classList.remove('open'); }
+
+
+/* ═══════════════════════════════════════════════════════════
+   A) AUTOCOMPLETE — mots-clés Algo
+═══════════════════════════════════════════════════════════ */
+const ALGO_KEYWORDS = [
+  'Algorithme','Var','Const','Type','Debut','Fin',
+  'Si','Alors','Sinon','FinSi','FSi',
+  'Pour','a','Pas','Faire','FinPour',
+  'TantQue','FinTantQue',
+  'Repeter','JusquA','FinRepeter',
+  'Fonction','Procedure','Retourner',
+  'Enregistrement','FinRec',
+  'Ecrire','Lire',
+  'Et','Ou','Non',
+  'Tableau','De','Pointeur','Vers',
+  'Nouveau','Liberer','Nil',
+  'Selon','Cas','Autrement','FinSelon',
+  // Types
+  'Entier','Reel','Booleen','Chaine','Caractere',
+  // Booléens
+  'Vrai','Faux',
+  // Fonctions built-in
+  'Abs','Sqrt','Racine','Floor','Ceil','Long','Longueur',
+  'Max','Min','Random','Aleatoire','Ord','Chr',
+  'Majuscule','Minuscule','Arrondi','Concat',
+  'Sous_Chaine','Trouve','Remplace','Trim',
+  'Log','Sin','Cos','Tan','Puissance',
+];
+
+CodeMirror.registerHelper('hint', 'algo', function(editor) {
+  const cur  = editor.getCursor();
+  const line = editor.getLine(cur.line);
+  let   start = cur.ch;
+
+  // Reculer jusqu'au début du mot
+  while (start > 0 && /[\wÀ-ÿ_]/.test(line[start - 1])) start--;
+
+  const word = line.slice(start, cur.ch).toLowerCase();
+  if (!word) return null;
+
+  const list = ALGO_KEYWORDS.filter(k => k.toLowerCase().startsWith(word));
+  if (!list.length) return null;
+
+  return {
+    list,
+    from: CodeMirror.Pos(cur.line, start),
+    to:   CodeMirror.Pos(cur.line, cur.ch),
+  };
+});
+
+// Autocomplete automatique à la frappe (après 2 chars)
+cm.on('inputRead', function(editor, change) {
+  if (change.origin === '+input' && /[\wÀ-ÿ]/.test(change.text[0])) {
+    const cur  = editor.getCursor();
+    const line = editor.getLine(cur.line);
+    let   start = cur.ch;
+    while (start > 0 && /[\wÀ-ÿ_]/.test(line[start - 1])) start--;
+    if (cur.ch - start >= 2) {
+      CodeMirror.commands.autocomplete(editor, null, { completeSingle: false });
+    }
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   A) ERROR LINE HIGHLIGHTING
+═══════════════════════════════════════════════════════════ */
+let _errorMarker = null;
+let _errorWidget = null;
+
+function highlightErrorLine(lineNum) {
+  clearErrorHighlight();
+  if (!lineNum || lineNum < 1) return;
+  const ln = lineNum - 1;  // CodeMirror est 0-indexé
+
+  // Highlight la ligne
+  cm.addLineClass(ln, 'background', 'cm-error-line');
+  _errorMarker = ln;
+
+  // Scroll vers la ligne
+  cm.scrollIntoView({ line: ln, ch: 0 }, 80);
+
+  // Gutter marker
+  const marker = document.createElement('div');
+  marker.innerHTML = '●';
+  marker.className = 'error-gutter';
+  marker.title = 'Erreur à cette ligne';
+  cm.setGutterMarker(ln, 'CodeMirror-linenumbers', marker);
+  _errorWidget = ln;
+}
+
+function clearErrorHighlight() {
+  if (_errorMarker !== null) {
+    cm.removeLineClass(_errorMarker, 'background', 'cm-error-line');
+    cm.setGutterMarker(_errorMarker, 'CodeMirror-linenumbers', null);
+    _errorMarker = null;
+    _errorWidget = null;
+  }
+}
+
+// Effacer le highlight quand l'utilisateur modifie le code
+cm.on('change', clearErrorHighlight);
+
+// Extraire le numéro de ligne depuis le message d'erreur
+function parseErrorLine(errMsg) {
+  if (!errMsg) return null;
+  const m = errMsg.match(/ligne\s*(\d+)/i);
+  return m ? parseInt(m[1]) : null;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   B) SAVE / SHARE
+═══════════════════════════════════════════════════════════ */
+async function doSave() {
+  const source = cm.getValue();
+  const title  = tabs.find(t => t.id === activeId)?.name || 'Sans titre';
+
+  document.getElementById('btnSave').disabled = true;
+  document.getElementById('btnSave').textContent = '🔗 …';
+
+  try {
+    const res  = await fetch('/api/save', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ source, title }),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      toast('Erreur : ' + data.error, 'er');
+      return;
+    }
+
+    const shareUrl = `${location.origin}/s/${data.id}`;
+    showShareModal(shareUrl, title);
+
+  } catch (e) {
+    toast('Erreur réseau', 'er');
+  } finally {
+    document.getElementById('btnSave').disabled = false;
+    document.getElementById('btnSave').textContent = '🔗 Partager';
+  }
+}
+
+function showShareModal(url, title) {
+  const html = `
+    <p style="color:var(--fg2);font-size:13px;margin-bottom:4px;">
+      Le code <strong style="color:var(--fg)">${esc(title)}</strong> a été sauvegardé.
+    </p>
+    <p style="color:var(--fg3);font-size:12px;margin-bottom:8px;">
+      Partagez ce lien — il chargera automatiquement votre algorithme :
+    </p>
+    <div class="share-url-box">
+      <input class="share-url-inp" id="shareUrlInp" value="${esc(url)}" readonly onclick="this.select()"/>
+      <button class="btn btn-ghost" style="height:34px;padding:0 12px;font-size:12px"
+              onclick="copyShareUrl()">Copier</button>
+    </div>`;
+  document.getElementById('mTitle').textContent = '🔗 Lien de partage';
+  document.getElementById('mBody').innerHTML    = html;
+  document.getElementById('mCopy').style.display = 'none';
+  document.getElementById('mOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('shareUrlInp')?.select(), 100);
+}
+
+function copyShareUrl() {
+  const inp = document.getElementById('shareUrlInp');
+  if (inp) {
+    navigator.clipboard.writeText(inp.value).then(() => toast('Lien copié !', 'ok'));
+  }
+}
+
+// Charger un snippet depuis l'URL (/s/XXXX ou ?s=XXXX)
+async function loadFromUrl() {
+  // Support /s/XXXX (path) et ?s=XXXX (query)
+  const pathMatch = location.pathname.match(/\/s\/([0-9a-f]{8})$/i);
+  const queryMatch = new URLSearchParams(location.search).get('s');
+  const sid = (pathMatch && pathMatch[1]) || queryMatch;
+  if (!sid) return;
+
+  try {
+    const res  = await fetch(`/api/load/${sid}`);
+    const data = await res.json();
+    if (data.error) { toast('Snippet introuvable', 'er'); return; }
+
+    // Charger dans l'onglet actif
+    if (activeId) {
+      const t = tabs.find(t => t.id === activeId);
+      if (t) {
+        t.name = data.title || 'Partagé';
+        t.code = data.code;
+        cm.setValue(data.code);
+        renderTabs();
+        toast(`Code "${data.title || 'partagé'}" chargé ✓`, 'ok');
+      }
+    }
+  } catch (e) {
+    toast('Erreur chargement snippet', 'er');
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SAVE TO DISK / OPEN FROM DISK
+═══════════════════════════════════════════════════════════ */
+
+function saveFileToDisk() {
+  const source = cm.getValue();
+  const tab    = tabs.find(t => t.id === activeId);
+  // Nom du fichier = nom de l'onglet avec extension .algo
+  let filename = (tab?.name || 'algorithme').replace(/\.algo$/, '') + '.algo';
+
+  const blob = new Blob([source], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`💾 ${filename} enregistré`, 'ok');
+}
+
+function openFileFromDisk() {
+  document.getElementById('fileInput').click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Géré aussi via addEventListener plus bas
+});
+
+function handleFileOpen(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validation : taille max 500KB
+  if (file.size > 500_000) {
+    toast('Fichier trop grand (max 500KB)', 'er');
+    return;
+  }
+  // Validation : extension
+  if (!file.name.match(/\.(algo|txt)$/i)) {
+    toast('Extension invalide (accepté : .algo, .txt)', 'er');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const code = e.target.result;
+    // Validation : contenu texte seulement
+    if (typeof code !== 'string') { toast('Fichier invalide', 'er'); return; }
+
+    const name = file.name.replace(/\.txt$/i, '.algo');
+
+    // Ouvrir dans l'onglet actif ou un nouvel onglet
+    if (activeId) {
+      const t = tabs.find(t => t.id === activeId);
+      if (t) {
+        t.name = name;
+        t.code = code;
+        cm.setValue(code);
+        renderTabs();
+      }
+    } else {
+      newTab(name, code);
+    }
+    toast(`📂 ${name} ouvert`, 'ok');
+    // Reset l'input pour permettre de rouvrir le même fichier
+    event.target.value = '';
+  };
+  reader.onerror = () => toast('Erreur lecture fichier', 'er');
+  reader.readAsText(file, 'utf-8');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EVENT LISTENERS
+═══════════════════════════════════════════════════════════ */
+document.getElementById('btnRun').onclick     = doRun;
+document.getElementById('btnStop').onclick    = doStop;
+document.getElementById('btnClear').onclick   = () => {
+  document.getElementById('consoleOut').innerHTML = '';
+  document.getElementById('stTime').textContent = '';
+  setStatus('', 'Prêt');
+};
+document.getElementById('btnSidebar').onclick  = () =>
+  document.getElementById('sidebar').classList.toggle('collapsed');
+document.getElementById('btnTheme').onclick    = toggleTheme;
+document.getElementById('btnKeys').onclick     = showKeys;
+document.getElementById('btnCloseModal').onclick  = closeModal;
+document.getElementById('btnCloseModal2').onclick = closeModal;
+document.getElementById('mOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('mOverlay')) closeModal();
+});
+
+document.getElementById('btnExport').onclick = e => {
+  e.stopPropagation();
+  document.getElementById('ddMenu').classList.toggle('open');
+};
+document.getElementById('ddC').onclick  = () => doExport('c');
+document.getElementById('ddPy').onclick = () => doExport('python');
+document.addEventListener('click', closeDrop);
+document.getElementById('ddMenu').addEventListener('click', e => e.stopPropagation());
+
+document.getElementById('btnSaveFile').onclick = saveFileToDisk;
+document.getElementById('fileInput').addEventListener('change', handleFileOpen);
+document.getElementById('btnSave').onclick     = doSave;
+document.getElementById('btnCopyGen').onclick = () => {
+  navigator.clipboard.writeText(document.getElementById('genOut').textContent)
+    .then(() => toast('Copié !', 'ok'));
+};
+document.getElementById('btnDlGen').onclick = () => {
+  const name = (tabs.find(t => t.id === activeId)?.name || 'algo')
+               .replace(/\.[^.]+$/, '') + '.' + genExt;
+  dlText(name, document.getElementById('genOut').textContent);
+};
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+applyTheme();
+newTab('Bonjour.algo', DEFAULT);
+loadExamples();
+// Charger depuis URL partagée si présente
+loadFromUrl();
+</script>
+</body>
+</html>

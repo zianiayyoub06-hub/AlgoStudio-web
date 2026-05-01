@@ -1,0 +1,48 @@
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+pip-wheel-metadata/
+*.egg-info/
+dist/
+build/
+
+# ── Flask / App ──────────────────────────────────────────────
+instance/
+.webassets-cache
+snippets.json
+app.log
+*.log
+
+# ── Environnement ────────────────────────────────────────────
+.env
+.env.local
+.env.production
+*.env
+
+# ── IDE ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Tests ────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Docker ───────────────────────────────────────────────────
+.dockerignore
+
+# ── Zip ──────────────────────────────────────────────────────
+*.zip

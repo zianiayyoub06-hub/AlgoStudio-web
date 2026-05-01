@@ -1,0 +1,1 @@
+{"a225f9c9": {"code": "Algorithme Bonjour;\nVar\n    nom : Chaine;\nDebut\n    Ecrire(\"Entrez votre nom :\");\n    Lire(nom);\n    Ecrire(\"Bonjour,\", nom, \"!\");\nFin.\n", "title": "Bonjour.algo", "ts": 1777630857}}
