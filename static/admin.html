@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AlgoStudio — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d0d1a;--bg2:#12121f;--bg3:#1a1a2e;--bg4:#232340;--fg:#cdd6f4;--fg2:#8890b0;--fg3:#4a4f70;
+  --accent:#cba6f7;--green:#a6e3a1;--red:#f38ba8;--yellow:#f9e2af;--blue:#89b4fa;--border:#2d2d50;
+  --mono:'JetBrains Mono',monospace;--ui:'Syne',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);min-height:100vh;padding:24px;}
+h1{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;}
+.sub{color:var(--fg3);font-size:12px;font-family:var(--mono);margin-bottom:24px;}
+#loginBox{max-width:360px;margin:80px auto;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:28px;}
+#loginBox h2{font-size:16px;margin-bottom:16px;color:var(--fg2);}
+input[type=password]{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;color:var(--fg);font-family:var(--mono);font-size:13px;outline:none;
+  transition:border-color .15s;}
+input[type=password]:focus{border-color:var(--accent);}
+button{margin-top:12px;width:100%;height:36px;background:var(--accent);color:#1a0030;
+  border:none;border-radius:6px;font-family:var(--ui);font-size:13px;font-weight:700;cursor:pointer;}
+button:hover{filter:brightness(1.1);}
+#dashboard{display:none;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.card-val{font-size:28px;font-weight:800;color:var(--accent);font-family:var(--mono);}
+.card-lbl{font-size:11px;color:var(--fg3);letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+.card.ok .card-val{color:var(--green);}
+.card.warn .card-val{color:var(--yellow);}
+.card.err .card-val{color:var(--red);}
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px;}
+.section h3{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--fg3);margin-bottom:12px;}
+.error-row{padding:8px 10px;border-radius:5px;background:var(--bg3);margin-bottom:6px;
+  font-family:var(--mono);font-size:12px;}
+.error-ts{color:var(--fg3);margin-right:10px;}
+.error-msg{color:var(--red);}
+.bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-top:4px;}
+.bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));border-radius:4px;transition:width .4s;}
+.uptime{font-family:var(--mono);font-size:13px;color:var(--blue);}
+.refresh-btn{height:28px;padding:0 12px;background:var(--bg4);color:var(--fg2);
+  border:1px solid var(--border);border-radius:5px;font-size:11px;cursor:pointer;
+  font-family:var(--ui);font-weight:600;width:auto;margin-top:0;}
+.refresh-btn:hover{background:var(--bg3);color:var(--fg);}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+  display:inline-block;margin-right:6px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h2>🔒 AlgoStudio Admin</h2>
+  <input type="password" id="keyInput" placeholder="ADMIN_KEY…" autocomplete="off"/>
+  <button onclick="login()">Connexion</button>
+  <div id="loginErr" style="margin-top:10px;color:var(--red);font-size:12px;font-family:var(--mono);"></div>
+</div>
+
+<div id="dashboard">
+  <div class="header-row">
+    <div>
+      <h1>AlgoStudio</h1>
+      <div class="sub"><span class="status-dot"></span>Serveur actif — <span id="uptime"></span></div>
+    </div>
+    <button class="refresh-btn" onclick="refresh()">⟳ Rafraîchir</button>
+  </div>
+
+  <div class="grid">
+    <div class="card ok">
+      <div class="card-val" id="s-total">—</div>
+      <div class="card-lbl">Exécutions totales</div>
+    </div>
+    <div class="card ok">
+      <div class="card-val" id="s-ok">—</div>
+      <div class="card-lbl">Succès</div>
+    </div>
+    <div class="card err">
+      <div class="card-val" id="s-err">—</div>
+      <div class="card-lbl">Erreurs utilisateur</div>
+    </div>
+    <div class="card warn">
+      <div class="card-val" id="s-timeout">—</div>
+      <div class="card-lbl">Timeouts</div>
+    </div>
+    <div class="card warn">
+      <div class="card-val" id="s-rate">—</div>
+      <div class="card-lbl">Rate limitées</div>
+    </div>
+    <div class="card err">
+      <div class="card-val" id="s-banned">—</div>
+      <div class="card-lbl">IPs bannies</div>
+    </div>
+    <div class="card">
+      <div class="card-val" id="s-avg">—</div>
+      <div class="card-lbl">Temps moy. (ms)</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Performance (dernières 200 exécutions)</h3>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px;">
+      <span style="font-size:12px;color:var(--fg2)">Temps moyen : <span id="p-avg" style="color:var(--accent)">—</span> ms</span>
+      <span style="font-size:12px;color:var(--fg2)">Max : <span id="p-max" style="color:var(--yellow)">—</span> ms</span>
+    </div>
+    <div class="bar-wrap"><div class="bar" id="perf-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="section">
+    <h3>Dernières erreurs utilisateur (max 20)</h3>
+    <div id="errors-list"><div style="color:var(--fg3);font-size:12px;">Aucune erreur.</div></div>
+  </div>
+</div>
+
+<script>
+let adminKey = '';
+
+function login() {
+  adminKey = document.getElementById('keyInput').value.trim();
+  fetch(`/api/admin/stats?key=${encodeURIComponent(adminKey)}`)
+    .then(r => {
+      if (r.status === 403) throw new Error('Clé incorrecte');
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      render(data);
+      setInterval(refresh, 15000);
+    })
+    .catch(e => {
+      document.getElementById('loginErr').textContent = e.message;
+    });
+}
+
+function refresh() {
+  fetch(`/api/admin/stats?key=${encodeURIComponent(adminKey)}`)
+    .then(r => r.json())
+    .then(render)
+    .catch(() => {});
+}
+
+function fmt_uptime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+  return `${h}h ${m}m ${ss}s`;
+}
+
+function render(d) {
+  document.getElementById('s-total').textContent   = d.runs_total;
+  document.getElementById('s-ok').textContent      = d.runs_ok;
+  document.getElementById('s-err').textContent     = d.runs_error;
+  document.getElementById('s-timeout').textContent = d.runs_timeout;
+  document.getElementById('s-rate').textContent    = d.rate_limited;
+  document.getElementById('s-banned').textContent  = d.banned_ips || 0;
+  document.getElementById('s-avg').textContent     = d.avg_exec_ms;
+  document.getElementById('p-avg').textContent     = d.avg_exec_ms;
+  document.getElementById('p-max').textContent     = d.max_exec_ms;
+  document.getElementById('uptime').textContent    = fmt_uptime(d.uptime_s);
+
+  // Perf bar (max 10s = 100%)
+  const pct = Math.min(100, Math.round((d.avg_exec_ms / 10000) * 100));
+  document.getElementById('perf-bar').style.width = pct + '%';
+
+  // Errors
+  const el = document.getElementById('errors-list');
+  if (!d.last_errors.length) {
+    el.innerHTML = '<div style="color:var(--fg3);font-size:12px;">Aucune erreur.</div>';
+  } else {
+    el.innerHTML = [...d.last_errors].reverse().map(e => {
+      const d2 = new Date(e.ts * 1000);
+      const ts = d2.toLocaleTimeString('fr-FR');
+      return `<div class="error-row">
+        <span class="error-ts">${ts}</span>
+        <span class="error-msg">${esc(e.msg)}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('keyInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>
