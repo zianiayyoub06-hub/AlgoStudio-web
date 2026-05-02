@@ -7,6 +7,15 @@
 [![License](https://img.shields.io/badge/Licence-MIT-green)](LICENSE)
 
 ---
+ 🌐 DIRECT WEB 
+Try AlgoStudio instantly in your browser:
+https://algostudio.onrender.com
+THANKS FOR VISITING 
+
+Note
+
+The live version is hosted on Render. If it hasn't been visited recently, the server might be "sleeping." Please allow up to 60 seconds for the first load.
+---
 
 ## ✨ Fonctionnalités
 
